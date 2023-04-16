@@ -1,7 +1,6 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
-# Create your views here.
-
+@require_POST
 def signup(request):
-    if(request.method == 'POST'):
-        return JsonResponse({"status":"ok"})
+    return JsonResponse({"status":"ok"})
