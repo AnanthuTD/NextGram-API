@@ -103,7 +103,7 @@ DATABASES = {
         'NAME': 'wowgram',
         'USER': 'ananthu',
         'PASSWORD': '#BreakRules.',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }

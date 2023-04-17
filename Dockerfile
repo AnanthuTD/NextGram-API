@@ -1,5 +1,10 @@
 # Use an official Python runtime as a parent image
 FROM python:3.9-slim
+FROM fedora:latest
+RUN dnf -y update && dnf -y install python3-pip
+
+# Install PostgreSQL development files
+RUN dnf install -y postgresql-devel
 
 # Set the working directory to /app
 WORKDIR /app
