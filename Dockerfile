@@ -1,11 +1,4 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
-FROM fedora:latest
-RUN dnf -y update && dnf -y install python3-pip
-
-# Install PostgreSQL development files
-RUN dnf install -y postgresql-devel
-
+FROM mybaseimage
 # Set the working directory to /app
 WORKDIR /app
 
@@ -16,8 +9,7 @@ COPY ./backend .
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Make port 80 available to the world outside this container
-EXPOSE 80
-
+EXPOSE 80 5432
 # Define environment variable
 ENV NAME World
 
