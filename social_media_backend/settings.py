@@ -101,9 +101,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'wowgram',
-        'USER': 'ananthu',
+        'USER': 'postgres',
         'PASSWORD': '#BreakRules.',
-        'HOST': '127.0.0.1',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
