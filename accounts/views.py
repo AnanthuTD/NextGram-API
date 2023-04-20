@@ -5,46 +5,43 @@ import json
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import re
+from .forms import SignupForm
 
 
 @require_POST
 def signup(request):
+
+    # Parse the JSON data from the request body
     data = json.loads(request.body)
+    print(data)
 
-    if data.email:
-        email = data.email
-        phone = None
+    # Create a form instance and populate it with the data
+    form = SignupForm(data)
+
+    # Validate the form data
+    if form.is_valid():
+        # Save the user data
+        user = form.save()
+
+        # Return a JSON response with the user data
+        return JsonResponse({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email or "",
+                'phone': form.phone or "",
+                # 'id_user': form.cleaned_data['id_user'],
+                'bio': form.cleaned_data.get('bio', ''),
+                'location': form.cleaned_data.get('location', ''),
+            },
+        })
     else:
-        email = None
-        phone = data.phone
-    password = data.password
-    name = data.name
-    user_name = data.username
-
-    response = JsonResponse({
-        'email': True,
-        'phone': True,
-        'password': True,
-        'name': True,
-        'user_name': True
-    })
-
-    if User.objects.filter(email=email).exists():
-        response.email = False
-    if User.objects.filter(phone=phone).exists():
-        response.phone = False
-    if User.objects.filter(username=user_name).exists():
-        response.user_name = False
-    else:
-        user = User.objects.create_user(
-            email=email,
-            phone=phone,
-            password=password,
-            name=name,
-            username=user_name,
-        )
-
-    return JsonResponse({'status': 'success'})
+        # Return a JSON response with the form errors
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors,
+        })
 
 
 @require_POST

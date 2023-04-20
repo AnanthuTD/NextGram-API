@@ -11,12 +11,15 @@ User = get_user_model()
 
 class SignupForm(UserCreationForm):
     phone_or_email = forms.CharField(max_length=100, required=True)
-    id_user = forms.IntegerField()
     bio = forms.CharField(max_length=500, required=False)
     profile_img = forms.ImageField(required=False)
     location = forms.CharField(max_length=100, required=False)
     email = None
     phone = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields.pop('password2')
 
     class Meta:
         model = User
@@ -50,8 +53,6 @@ class SignupForm(UserCreationForm):
         profile = Profile.objects.create(user=user)
         if self.phone:
             profile.phone = self.phone
-        if self.cleaned_data.get('id_user'):
-            profile.id_user = self.cleaned_data['id_user']
         if self.cleaned_data.get('bio'):
             profile.bio = self.cleaned_data['bio']
         if self.cleaned_data.get('profile_img'):
