@@ -59,5 +59,9 @@ class SignupForm(UserCreationForm):
             profile.profile_img = self.cleaned_data['profile_img']
         if self.cleaned_data.get('location'):
             profile.location = self.cleaned_data['location']
-        profile.save()
+        try:
+            profile.save()
+        except Exception as e:
+            user.delete()
+            raise forms.ValidationError('Error saving profile : ' + str(e))
         return user
