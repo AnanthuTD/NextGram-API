@@ -3,6 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 import json
 
+
 class SignupViewTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -29,9 +30,10 @@ class SignupViewTest(TestCase):
         }
 
     def test_valid_signup(self):
-        response = self.client.post(self.url, json.dumps(self.valid_payload), content_type='application/json')
+        response = self.client.post(self.url, json.dumps(
+            self.valid_payload), content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        print ("response : " , response.json())
+        print("response : ", response.json())
         self.assertEqual(response.json()['success'], True)
         """ self.assertIsNotNone(response.json()['errors']['username'])
         self.assertEqual(response.json()['errors']['email'], self.valid_payload['email'])
@@ -41,8 +43,20 @@ class SignupViewTest(TestCase):
         self.assertEqual(response.json()['errors']['location'], self.valid_payload['location']) """
 
     def test_invalid_signup(self):
-        response = self.client.post(self.url, json.dumps(self.invalid_payload), content_type='application/json')
+        response = self.client.post(self.url, json.dumps(
+            self.invalid_payload), content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['success'], False)
         self.assertTrue('email' in response.json()['errors'])
         self.assertTrue('phone_or_email' in response.json()['errors'])
+
+
+class LoginViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.url = reverse('login')
+
+    def test_backends(self):
+        response = self.client.post(self.url, json.dumps(
+            {"phone_or_email_or_username": '0123456789', "password": 'testPassword#'}), content_type='application/json')
+        print("response : ", response.json())

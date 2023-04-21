@@ -69,3 +69,7 @@ class SignupForm(UserCreationForm):
             user.delete()
             raise forms.ValidationError('Error saving profile : ' + str(e))
         return user
+    
+
+
+
