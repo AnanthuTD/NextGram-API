@@ -3,6 +3,7 @@ import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
+from jsonschema import ValidationError
 from .models import Profile
 
 
@@ -38,11 +39,14 @@ class SignupForm(UserCreationForm):
                 raise forms.ValidationError('Phone number already exists')
             self.phone = phone_or_email
         else:
-            if not validate_email(phone_or_email):
+            try:
+                validate_email(phone_or_email)
+                if User.objects.filter(email=phone_or_email).exists():
+                    raise forms.ValidationError('Email address already exists')
+                self.email = phone_or_email
+            except ValidationError as e:
+                print("\ninvalid", e.message)
                 raise forms.ValidationError('Invalid email address')
-            if User.objects.filter(email=phone_or_email).exists():
-                raise forms.ValidationError('Email address already exists')
-            self.email = phone_or_email
         return phone_or_email
 
     def save(self, commit=True):
