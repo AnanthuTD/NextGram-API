@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import logging
 import os
 from pathlib import Path
 
@@ -108,14 +109,20 @@ DATABASES = {
     }
 }
 
+# autentitcation backends
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+   'accounts.backends.UsernameEmailPhoneBackend',
+]
+
+#  'accounts.backends.PhoneBackend',
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'accounts.backends.PhoneBackend',
-    },
+
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
@@ -157,3 +164,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    # format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[        logging.StreamHandler()    ]
+)
+
