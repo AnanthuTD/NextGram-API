@@ -14,15 +14,6 @@ class UsernameEmailPhoneBackend(ModelBackend):
             user = user_model.objects.get(Q(username=phone_email_username) | Q(
                 email=phone_email_username) | Q(profile__phone=phone_email_username))
             if user.check_password(password) and self.user_can_authenticate(user):
-                profile = self.get_profile(user.id)
-                user.profile = profile
                 return user
         except user_model.DoesNotExist:
-            return None
-
-    def get_profile(self, id):
-        try:
-            profile = Profile.objects.get(user_id=id)
-            return profile
-        except Profile.DoesNotExist:
             return None
