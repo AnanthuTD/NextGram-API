@@ -1,10 +1,11 @@
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
+from django.contrib.auth.decorators import login_required
 import json
 from django.core import serializers
 # from accounts.backends import PhoneBackend
 from .forms import SignupForm
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login as set_login
 
 
 @require_POST
@@ -56,29 +57,42 @@ def signup(request):
         })
 
 
-@require_POST
 def login(request):
-    data = json.loads(request.body)
+    if (request.method == 'POST'):
+        data = json.loads(request.body)
 
-    if not data:
-        return JsonResponse({'status': False, 'errors': {}})
+        if not data:
+            return JsonResponse({'status': False, 'errors': {}})
 
-    phone_email_username = data['phone_email_username']
-    password = data['password']
+        phone_email_username = data['phone_email_username']
+        password = data['password']
 
-    user = authenticate(
-        request, phone_email_username=phone_email_username, password=password)
-    
-    if not user:
-        return JsonResponse({'status': False, 'errors': {}})
+        user = authenticate(
+            request, phone_email_username=phone_email_username, password=password)
 
-    return JsonResponse({
-        'success': True,
-        'user': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'phone': user.profile.phone,
-            'bio': user.profile.bio,
-            'location': user.profile.location,
-        }})
+        if not user:
+            return JsonResponse({'status': False, 'errors': {}})
+
+        set_login(request, user)
+
+        return JsonResponse({
+            'status': True,
+            'user': serialize_to_dict(user)})
+
+    elif (request.method == 'GET'):
+        if request.user.is_authenticated:
+            return JsonResponse({
+                'status': True,
+                'user': serialize_to_dict(request.user)})
+        return JsonResponse({'status': False})
+
+
+def serialize_to_dict(user):
+    return {
+        # 'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'phone': user.profile.phone or '',
+        'bio': user.profile.bio or '',
+        'location': user.profile.location or '',
+    }
