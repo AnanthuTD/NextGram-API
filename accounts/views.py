@@ -60,19 +60,15 @@ def signup(request):
 def login(request):
     data = json.loads(request.body)
 
-    print("data: ", data)
-
     if not data:
         return JsonResponse({'status': False, 'errors': {}})
 
-    phone_email_username = data['phone_or_email_or_username']
+    phone_email_username = data['phone_email_username']
     password = data['password']
 
     user = authenticate(
         request, phone_email_username=phone_email_username, password=password)
-
-    print(vars(user))
-
+    
     if not user:
         return JsonResponse({'status': False, 'errors': {}})
 
@@ -81,9 +77,8 @@ def login(request):
         'user': {
             'id': user.id,
             'username': user.username,
-            'email': user.email or "",
-            # 'phone': user.phone or "",
-            # 'id_user': form.cleaned_data['id_user'],
-            # 'bio': user.bio,
-            # 'location': user.location,
+            'email': user.email,
+            'phone': user.profile.phone,
+            'bio': user.profile.bio,
+            'location': user.profile.location,
         }})
