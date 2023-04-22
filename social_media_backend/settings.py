@@ -113,7 +113,7 @@ DATABASES = {
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-   'accounts.backends.UsernameEmailPhoneBackend',
+    'accounts.backends.UsernameEmailPhoneBackend',
 ]
 
 #  'accounts.backends.PhoneBackend',
@@ -168,6 +168,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 logging.basicConfig(
     level=logging.DEBUG,
     # format='%(asctime)s %(levelname)s %(message)s',
-    handlers=[        logging.StreamHandler()    ]
+    handlers=[logging.StreamHandler()]
 )
-
