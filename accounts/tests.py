@@ -58,15 +58,15 @@ class LoginViewTest(TestCase):
 
     def test_backends_phone(self):
         response = self.client.post(self.url, json.dumps(
-            {"phone_or_email_or_username": '0123456789', "password": 'testPassword#'}), content_type='application/json')
+            {'phone_email_username': '0123456789', "password": 'testPassword#'}), content_type='application/json')
         print("response : ", response.json())
 
     def test_backends_email(self):
         response = self.client.post(self.url, json.dumps(
-            {"phone_or_email_or_username": 'testuser@example.com', "password": 'testPassword#'}), content_type='application/json')
+            {'phone_email_username': 'testuser@example.com', "password": 'testPassword#'}), content_type='application/json')
         print("response : ", response.json())
 
     def test_backends_username(self):
         response = self.client.post(self.url, json.dumps(
-            {"phone_or_email_or_username": 'testuser', "password": 'testPassword#'}), content_type='application/json')
+            {'phone_email_username': 'testuser', "password": 'testPassword#'}), content_type='application/json')
         print("response : ", response.json())
