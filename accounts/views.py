@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import json
+from django.core import serializers
+# from accounts.backends import PhoneBackend
 from .forms import SignupForm
 from django.contrib.auth import authenticate
 
@@ -62,12 +64,26 @@ def login(request):
 
     if not data:
         return JsonResponse({'status': False, 'errors': {}})
-    
+
     phone_email_username = data['phone_or_email_or_username']
     password = data['password']
 
-    user = authenticate(request, phone=phone_email_username, password=password)
+    user = authenticate(
+        request, phone_email_username=phone_email_username, password=password)
 
-    print("user = ",user)
+    print(vars(user))
 
-    return JsonResponse({'status': 'success'})
+    if not user:
+        return JsonResponse({'status': False, 'errors': {}})
+
+    return JsonResponse({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email or "",
+            # 'phone': user.phone or "",
+            # 'id_user': form.cleaned_data['id_user'],
+            # 'bio': user.bio,
+            # 'location': user.location,
+        }})
