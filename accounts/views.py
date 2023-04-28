@@ -3,7 +3,6 @@ from django.views.decorators.http import require_POST, require_GET
 from django.contrib.auth.decorators import login_required
 import json
 from django.core import serializers
-# from accounts.backends import PhoneBackend
 from .forms import SignupForm
 from django.contrib.auth import authenticate, login as set_login
 
@@ -13,7 +12,6 @@ def signup(request):
 
     # Parse the JSON data from the request body
     data = json.loads(request.body)
-    print(data)
 
     # Create a form instance and populate it with the data
     form = SignupForm(data)
@@ -30,12 +28,17 @@ def signup(request):
             # create new session
             request.session.create()
 
+            # set current user session data
+            set_login(request, user)
+
             # Return a JSON response with the user data
             return JsonResponse({
                 'success': True,
                 'user': {
                     'id': user.id,
                     'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
                     'email': user.email or "",
                     'phone': form.phone or "",
                     # 'id_user': form.cleaned_data['id_user'],
@@ -91,6 +94,8 @@ def serialize_to_dict(user):
     return {
         # 'id': user.id,
         'username': user.username,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
         'email': user.email,
         'phone': user.profile.phone or '',
         'bio': user.profile.bio or '',
