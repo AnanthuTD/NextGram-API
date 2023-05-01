@@ -54,7 +54,8 @@ class SignupForm(UserCreationForm):
         return phone_or_email
 
     # seperate first_name and last_name
-    def clean_fullname(self, fullname):
+    def clean_fullname(self):
+        fullname = self.cleaned_data.get('fullname')
         if len(fullname) > 100:
             raise forms.ValidationError(
                 'Full name must be less than 100 characters')
