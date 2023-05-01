@@ -7,7 +7,7 @@ import post.utils.rename_media
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('posts', '0001_initial'),
+        ('post', '0001_initial'),
     ]
 
     operations = [

@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('content', models.TextField()),
                 ('time_stamp', models.DateTimeField(auto_now_add=True)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('post', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.post')),
+                ('post', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='post.post')),
             ],
         ),
     ]

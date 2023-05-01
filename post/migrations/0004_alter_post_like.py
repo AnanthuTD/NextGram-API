@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('posts', '0003_rename_post_post_file'),
+        ('post', '0003_rename_post_post_file'),
     ]
 
     operations = [
