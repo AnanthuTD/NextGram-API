@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'csrf_token',
-    'posts'
+    'post'
 ]
 
 MIDDLEWARE = [

@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
-from posts.utils.rename_media import rename_media
+from post.utils.rename_media import rename_media
 
 User = get_user_model()
 
