@@ -13,8 +13,6 @@ def signup(request):
     # Parse the JSON data from the request body
     data = json.loads(request.body)
 
-    print("data: ", data)
-
     # Create a form instance and populate it with the data
     form = SignupForm(data)
 
@@ -43,8 +41,6 @@ def signup(request):
                 print("error logging in")
                 traceback.print_exc()
                 raise ValueError("intentional")
-
-            print('request', vars(request.user))
 
             # Return a JSON response with the user data
             return JsonResponse({
@@ -94,9 +90,6 @@ def loginView(request):
         # # set current user session data
         if user is not None:
             login(request, user)
-            # print('request', vars(request.user))
-
-        print('authenticated', request.user.is_authenticated)
 
         return JsonResponse({
             'status': True,
