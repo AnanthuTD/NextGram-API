@@ -12,7 +12,7 @@ class Post(models.Model):
     file = models.FileField(upload_to=rename_media)
     like = ArrayField(models.CharField(max_length=255), null=True, blank=True)
     shares = ArrayField(models.CharField(max_length=255), null=True, blank=True)
-    description = models.TextField(blank=True)
+    caption = models.TextField(blank=True)
     hash_tag = ArrayField(models.CharField(max_length=255), blank=True, null=True)
     mentions = ArrayField(models.CharField(max_length=255), blank=True, null=True)
     location = models.CharField(max_length=100, blank=True)

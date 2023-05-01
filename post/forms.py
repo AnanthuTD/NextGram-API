@@ -16,7 +16,7 @@ class PostForm(forms.ModelForm):
                   'file',
                   'like',
                   'shares',
-                  'description',
+                  'caption',
                   'hash_tag',
                   'mentions',
                   'location',
