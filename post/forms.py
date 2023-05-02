@@ -14,8 +14,6 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = [
                   'file',
-                  'like',
-                  'shares',
                   'caption',
                   'hash_tag',
                   'mentions',
