@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST, require_GET
 import json
 from django.core import serializers
 from .forms import SignupForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 
 
 @require_POST
@@ -19,21 +19,21 @@ def signup(request):
     # Validate the form data
     if form.is_valid():
         try:
-            # Save the user data 
+            # Save the user data
             user = form.save()
 
             phone_email_username = data["username"]
             password = data["password1"]
 
             newuser = authenticate(
-            request, phone_email_username=phone_email_username, password=password)
-           
+                request, phone_email_username=phone_email_username, password=password)
+
             # Remove session data
             request.session.flush()
 
             # create new session
             request.session.create()
-          
+
             # set current user session data
             try:
                 login(request, newuser)
@@ -71,7 +71,7 @@ def signup(request):
         })
 
 
-def loginView(request):
+def login_view(request):
     if (request.method == 'POST'):
         data = json.loads(request.body)
 
@@ -117,3 +117,9 @@ def serialize_to_dict(user):
         'bio': user.profile.bio or '',
         'location': user.profile.location or '',
     }
+
+
+def logout_view(request):
+    logout(request)
+    response = {'status': True}
+    return JsonResponse(response)
