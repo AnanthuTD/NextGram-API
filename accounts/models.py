@@ -13,4 +13,5 @@ class Profile(models.Model):
     profile_img = models.ImageField(
         upload_to='profile_images', default='default-profile-pic.svg')
     location = models.CharField(max_length=100, blank=True)
+    id_user = models.UUIDField(unique=True, default=uuid.uuid4)
 
