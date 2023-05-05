@@ -1,5 +1,5 @@
 import traceback
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.views.decorators.http import require_POST, require_GET
 import json
 from django.core import serializers
@@ -71,7 +71,7 @@ def signup(request):
         })
 
 
-def login_view(request):
+def login_view(request: HttpRequest):
     if (request.method == 'POST'):
         data = json.loads(request.body)
 
@@ -87,13 +87,19 @@ def login_view(request):
         if not user:
             return JsonResponse({'status': False, 'errors': {}})
 
-        # # set current user session data
+        # set current user session data
         if user is not None:
             login(request, user)
 
-        return JsonResponse({
+        response = JsonResponse({
             'status': True,
             'user': serialize_to_dict(user)})
+
+        id_user = user.profile.id_user
+        response.set_cookie('user', value=id_user,
+                            expires=request.session.get_expiry_date(),samesite='Lax')
+
+        return response
 
     elif (request.method == 'GET'):
         if request.user.is_authenticated:
@@ -101,7 +107,6 @@ def login_view(request):
                 'status': True,
                 'user': serialize_to_dict(request.user)})
         return JsonResponse({'status': False})
-
     else:
         return JsonResponse({'status': False})
 
@@ -119,7 +124,8 @@ def serialize_to_dict(user):
     }
 
 
-def logout_view(request):
+def logout_view(request: HttpRequest):
     logout(request)
-    response = {'status': True}
-    return JsonResponse(response)
+    response = JsonResponse({'status': True})
+    response.delete_cookie('user')
+    return response
