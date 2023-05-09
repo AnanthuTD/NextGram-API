@@ -1,5 +1,5 @@
 import logging
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from .forms import PostForm
 from django.views.decorators.http import require_GET
 from .models import Post
@@ -40,13 +40,11 @@ def post(request):
 
 
 @require_GET
-def allPost(request):
+def allPost(request: HttpRequest):
 
     postsQuery = Post.objects.select_related(
-        "user").annotate(username=F('user__username'))
+        "user").exclude(user=request.user).annotate(username=F('user__username'))
 
     posts = list(postsQuery.values())
-
-    print("all posts : ", posts)
 
     return JsonResponse({'status': True, 'posts': posts})
