@@ -2,7 +2,9 @@ import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
+from django.dispatch import receiver
 from post.utils.rename_media import rename_media
+from django.db.models.signals import post_save
 
 User = get_user_model()
 
@@ -24,5 +26,12 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
+
+@receiver(post_save, sender=Post)
+def increase_post_count(sender, instance, created, **kwargs):
+    if created:
+        profile = instance.user.profile
+        profile.post_count += 1
+        profile.save()
     
 
