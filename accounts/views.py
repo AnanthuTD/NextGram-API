@@ -1,6 +1,7 @@
 
+from uuid import UUID
 from django.http import JsonResponse, HttpRequest
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 import json
 from .forms import SignupForm
 from django.contrib.auth import authenticate, login, logout
@@ -41,7 +42,7 @@ def signup(request):
 
             response = JsonResponse({
                 'status': True,
-                'user': serialize_to_dict(authuser)}) # type: ignore
+                'user': serialize_to_dict(authuser)})  # type: ignore
 
             id_user = authuser.profile.id_user  # type: ignore
             response.set_cookie('user', value=id_user,
@@ -75,7 +76,7 @@ def login_view(request: HttpRequest):
         password = data['password1']
 
         user = authenticate(
-            request, phone_email_username=phone_email_username, password=password) 
+            request, phone_email_username=phone_email_username, password=password)
 
         if not user:
             return JsonResponse({'status': False, 'errors': {}})
@@ -86,7 +87,7 @@ def login_view(request: HttpRequest):
 
         response = JsonResponse({
             'status': True,
-            'user': serialize_to_dict(user)}) # type: ignore
+            'user': serialize_to_dict(user)})  # type: ignore
 
         id_user = user.profile.id_user  # type: ignore
         response.set_cookie('user', value=id_user,
@@ -98,7 +99,7 @@ def login_view(request: HttpRequest):
         if request.user.is_authenticated and request.user.profile:  # type: ignore
             return JsonResponse({
                 'status': True,
-                'user': serialize_to_dict(request.user)}) # type: ignore
+                'user': serialize_to_dict(request.user)})  # type: ignore
         else:
             logout_view(request)
             return JsonResponse({'status': False})
@@ -171,3 +172,30 @@ def get_profile(request: HttpRequest, username: str):
                    'post_count': profile.post_count, }
 
     return JsonResponse({'status': True, 'profile': profile_res})
+
+
+def follow(request: HttpRequest):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        id_user = data['id_user']
+        if (request.user.is_authenticated and id_user):
+
+            profile = Profile.objects.get(id_user=id_user)
+            request.user.profile.following.add(profile)
+            response = {'status': True,
+                        'user': serialize_to_dict(request.user)}
+            return JsonResponse(response)
+
+    return JsonResponse({'status': False})
+
+@require_http_methods(['DELETE'])
+def unfollow(request: HttpRequest, id_user:UUID):
+    if request.method == 'DELETE':
+        if (request.user.is_authenticated and id_user):
+            profile = Profile.objects.get(id_user=id_user)
+            request.user.profile.following.remove(profile)
+            response = {'status': True,
+                        'user': serialize_to_dict(request.user)}
+            return JsonResponse(response)
+
+    return JsonResponse({'status': False})
