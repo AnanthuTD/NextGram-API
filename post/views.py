@@ -1,9 +1,12 @@
 import logging
-from django.http import HttpRequest, JsonResponse
+from pprint import pprint
+from uuid import UUID
+from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404
 from .forms import PostForm
-from django.views.decorators.http import require_GET
-from .models import Post
-from django.db.models import F
+from django.views.decorators.http import require_GET, require_http_methods
+from .models import Post, User
+from django.db.models import F, Prefetch
 
 
 def post(request):
@@ -41,10 +44,70 @@ def post(request):
 
 @require_GET
 def allPost(request: HttpRequest):
+    postsQuery = Post.objects.prefetch_related(Prefetch("likes", queryset=User.objects.only(
+        "username", "first_name", "last_name"))).select_related('user').exclude(user=request.user)
 
-    postsQuery = Post.objects.select_related(
-        "user").exclude(user=request.user).annotate(username=F('user__username'))
+    posts = []
 
-    posts = list(postsQuery.values())
+    for post in postsQuery:
+        # Create a new dictionary for the updated post
+        new_post = {}
+
+        # Copy over all the attributes from the original post
+        for key, value in vars(post).items():
+            if key not in ('_prefetched_objects_cache', '_state'):
+                new_post[key] = value
+
+        # Add the new 'likes' field to the new post
+        new_post['likes'] = list(post.likes.values(
+            "username", "first_name", "last_name",))
+        new_post['username'] = post.user.get_username()
+
+        # Add the new post to the list
+        posts.append(new_post)
+
+    pprint(posts)
 
     return JsonResponse({'status': True, 'posts': posts})
+
+
+@ require_http_methods(['PATCH'])
+def like(request, post_id: UUID):
+    # Make sure the user is authenticated
+    if not request.user.is_authenticated:
+        return HttpResponseBadRequest('You must be logged in to like a post.')
+
+    # Get the post object or return a 404 error if it doesn't exist
+    post = get_object_or_404(Post, pk=post_id)
+
+    # Add the user to the post's likes
+    post.likes.add(request.user)
+
+    post.save()
+
+    # Return a success JSON response
+    data = {'success': True, 'message': 'Post liked successfully.', 'likes': list(post.likes.values(
+            "username", "first_name", "last_name",))}
+    return JsonResponse(data)
+
+
+@ require_http_methods(['PATCH'])
+def dislike(request, post_id: UUID):
+    # Make sure the user is authenticated
+    if not request.user.is_authenticated:
+        return HttpResponseBadRequest('You must be logged in to like a post.')
+
+    # Get the post object or return a 404 error if it doesn't exist
+    post = get_object_or_404(Post, pk=post_id)
+
+    # Add the user to the post's likes
+    try:
+        post.likes.remove(request.user)
+        post.save()
+    except:
+        pass
+
+    # Return a success JSON response
+    data = {'success': True, 'message': 'Post liked successfully.', 'likes': list(post.likes.values(
+            "username", "first_name", "last_name",))}
+    return JsonResponse(data)

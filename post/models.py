@@ -8,15 +8,18 @@ from django.db.models.signals import post_save
 
 User = get_user_model()
 
+
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post_id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     file = models.FileField(upload_to=rename_media)
-    like = ArrayField(models.CharField(max_length=255), null=True, blank=True)
-    shares = ArrayField(models.CharField(max_length=255), null=True, blank=True)
+    likes = models.ManyToManyField("auth.User", related_name='liked')
+    # shares = models.ManyToManyField("auth.User")
     caption = models.TextField(blank=True)
-    hash_tag = ArrayField(models.CharField(max_length=255), blank=True, null=True)
-    mentions = ArrayField(models.CharField(max_length=255), blank=True, null=True)
+    hash_tag = ArrayField(models.CharField(
+        max_length=255), blank=True, null=True)
+    mentions = ArrayField(models.CharField(
+        max_length=255), blank=True, null=True)
     location = models.CharField(max_length=100, blank=True)
     time_stamp = models.DateTimeField(auto_now_add=True)
 
@@ -27,11 +30,10 @@ class Comment(models.Model):
     content = models.TextField()
     time_stamp = models.DateTimeField(auto_now_add=True)
 
+
 @receiver(post_save, sender=Post)
 def increase_post_count(sender, instance, created, **kwargs):
     if created:
         profile = instance.user.profile
         profile.post_count += 1
         profile.save()
-    
-
