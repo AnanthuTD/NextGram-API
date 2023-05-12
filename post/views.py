@@ -1,3 +1,4 @@
+import json
 import logging
 from pprint import pprint
 from uuid import UUID
@@ -5,7 +6,7 @@ from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from .forms import PostForm
 from django.views.decorators.http import require_GET, require_http_methods
-from .models import Post, User
+from .models import Post, User, Comment
 from django.db.models import F, Prefetch
 
 
@@ -124,3 +125,48 @@ def likes_serializer(likes):
         "profile_img",
         "id_user"
     ))
+
+
+def comments(request: HttpRequest):
+    
+    if request.method == "POST":
+        data = json.loads(request.body)
+        comment = data["comment"]
+        print(comment)
+        if not comment or not isinstance(comment, str):
+            return JsonResponse({'status': False, 'message': 'no comment found'})
+        try:
+            post_id = data['post_id']
+            post = Post.objects.get(post_id=post_id)
+        except Post.DoesNotExist:
+            return JsonResponse({'status': False, 'message': 'post does not exist'})
+        comment_instance = Comment.objects.create(
+            post=post, author=request.user, comment=comment)
+        return JsonResponse({'status': True, 'message': 'comment created', 'comment':{
+                'id': comment_instance.id,
+                'author': comment_instance.author.get_username(),
+                'profile_img':comment_instance.author.profile.profile_img.url,
+                'comment': comment_instance.comment,
+                'time_stamp': comment_instance.time_stamp
+            }})
+    
+    elif request.method == 'GET':
+        try:
+            post_id = request.GET['post_id']
+            post = Post.objects.get(post_id=post_id)
+        except Post.DoesNotExist:
+            return JsonResponse({'status': False, 'message': 'post does not exist'})
+        comments = Comment.objects.filter(post=post).select_related('author')
+        comment_list = []
+        for comment in comments:
+            comment_list.append({
+                'id': comment.id,
+                'author': comment.author.get_username(),
+                'profile_img':comment.author.profile.profile_img.url,
+                'comment': comment.comment,
+                'time_stamp': comment.time_stamp
+            })
+        return JsonResponse({'status': True, 'comments': comment_list})
+    
+    else:
+        return JsonResponse({'status': False, 'message': 'invalid request method'})
