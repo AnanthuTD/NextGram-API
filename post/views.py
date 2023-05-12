@@ -59,8 +59,8 @@ def allPost(request: HttpRequest):
                 new_post[key] = value
 
         # Add the new 'likes' field to the new post
-        new_post['likes'] = list(post.likes.values(
-            "username", "first_name", "last_name",))
+        new_post['likes'] = likes_serializer(post.likes)
+
         new_post['username'] = post.user.get_username()
 
         # Add the new post to the list
@@ -86,8 +86,9 @@ def like(request, post_id: UUID):
     post.save()
 
     # Return a success JSON response
-    data = {'success': True, 'message': 'Post liked successfully.', 'likes': list(post.likes.values(
-            "username", "first_name", "last_name",))}
+    data = {'success': True, 'message': 'Post liked successfully.',
+            'likes': likes_serializer(post.likes)}
+
     return JsonResponse(data)
 
 
@@ -108,6 +109,18 @@ def dislike(request, post_id: UUID):
         pass
 
     # Return a success JSON response
-    data = {'success': True, 'message': 'Post liked successfully.', 'likes': list(post.likes.values(
-            "username", "first_name", "last_name",))}
+    data = {'success': True, 'message': 'Post liked successfully.', 'likes': likes_serializer(post.likes)
+            }
     return JsonResponse(data)
+
+
+def likes_serializer(likes):
+    return list(likes.annotate(
+        profile_img=F('profile__profile_img'), id_user=F('profile__id_user')
+    ).values(
+        "username",
+        "first_name",
+        "last_name",
+        "profile_img",
+        "id_user"
+    ))
