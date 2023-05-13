@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'csrf_token',
-    'post'
+    'post',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -171,3 +173,6 @@ logging.basicConfig(
     # format='%(asctime)s %(levelname)s %(message)s',
     handlers=[logging.StreamHandler()]
 )
+
+# Daphne
+ASGI_APPLICATION = "social_media_backend.asgi.application"
