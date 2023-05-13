@@ -25,7 +25,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('csrf_token/', include('csrf_token.urls')),
     path('post/', include('post.urls')),
-   
+    path('chat/', include('chat.urls')),
 ]
 
 urlpatterns = urlpatterns+static(settings.MEDIA_URL,
