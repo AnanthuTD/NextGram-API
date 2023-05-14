@@ -1,5 +1,6 @@
 
 from uuid import UUID
+import uuid
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 import json
@@ -8,6 +9,8 @@ from django.contrib.auth import authenticate, login, logout
 from .models import Profile
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from .models import Profile
 
 
 @require_POST
@@ -153,7 +156,16 @@ def profile(request: HttpRequest):
 
 
 def get_profile(request: HttpRequest, username: str):
-    user = User.objects.get(username=username)
+    username_validator = UnicodeUsernameValidator()
+    is_username = username_validator.__call__(username) is None
+    is_uuid = is_valid_uuid(username)
+    if is_uuid:
+        user = User.objects.get(profile__id_user=username)
+    elif is_username:
+        user = User.objects.get(username=username)
+    else:
+        return JsonResponse({'status': False})
+
     profile: Profile = user.profile  # type: ignore
     following_ids = list(profile.following.values_list('id_user', flat=True))
     followers_ids = list(profile.followers.values_list(  # type: ignore
@@ -188,8 +200,9 @@ def follow(request: HttpRequest):
 
     return JsonResponse({'status': False})
 
+
 @require_http_methods(['DELETE'])
-def unfollow(request: HttpRequest, id_user:UUID):
+def unfollow(request: HttpRequest, id_user: UUID):
     if request.method == 'DELETE':
         if (request.user.is_authenticated and id_user):
             profile = Profile.objects.get(id_user=id_user)
@@ -199,3 +212,11 @@ def unfollow(request: HttpRequest, id_user:UUID):
             return JsonResponse(response)
 
     return JsonResponse({'status': False})
+
+
+def is_valid_uuid(value):
+    try:
+        uuid.UUID(value)
+        return True
+    except ValueError:
+        return False
