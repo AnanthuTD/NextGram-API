@@ -10,7 +10,7 @@ from .models import Post, User, Comment
 from django.db.models import F, Prefetch
 
 
-def post(request):
+def post(request: HttpRequest, other_user=None):
 
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES, user_id=request.user.id)
@@ -23,13 +23,15 @@ def post(request):
             return JsonResponse({'status': False})
 
     elif request.method == "GET":
-        user = request.user
-
+        if other_user:
+            user = get_object_or_404(User, username=other_user)
+        else:
+            user = request.user
         try:
             posts = list(user.post_set.all().values("post_id",
                                                     'file',
-                                                    'like',
-                                                    'shares',
+                                                    'likes',
+
                                                     'caption',
                                                     'hash_tag',
                                                     'mentions',
@@ -128,7 +130,7 @@ def likes_serializer(likes):
 
 
 def comments(request: HttpRequest):
-    
+
     if request.method == "POST":
         data = json.loads(request.body)
         comment = data["comment"]
@@ -142,14 +144,14 @@ def comments(request: HttpRequest):
             return JsonResponse({'status': False, 'message': 'post does not exist'})
         comment_instance = Comment.objects.create(
             post=post, author=request.user, comment=comment)
-        return JsonResponse({'status': True, 'message': 'comment created', 'comment':{
-                'id': comment_instance.id,
-                'author': comment_instance.author.get_username(),
-                'profile_img':comment_instance.author.profile.profile_img.url,
-                'comment': comment_instance.comment,
-                'time_stamp': comment_instance.time_stamp
-            }})
-    
+        return JsonResponse({'status': True, 'message': 'comment created', 'comment': {
+            'id': comment_instance.id,
+            'author': comment_instance.author.get_username(),
+            'profile_img': comment_instance.author.profile.profile_img.url,
+            'comment': comment_instance.comment,
+            'time_stamp': comment_instance.time_stamp
+        }})
+
     elif request.method == 'GET':
         try:
             post_id = request.GET['post_id']
@@ -162,11 +164,11 @@ def comments(request: HttpRequest):
             comment_list.append({
                 'id': comment.id,
                 'author': comment.author.get_username(),
-                'profile_img':comment.author.profile.profile_img.url,
+                'profile_img': comment.author.profile.profile_img.url,
                 'comment': comment.comment,
                 'time_stamp': comment.time_stamp
             })
         return JsonResponse({'status': True, 'comments': comment_list})
-    
+
     else:
         return JsonResponse({'status': False, 'message': 'invalid request method'})
