@@ -8,4 +8,4 @@ def generate_room_name(username1, username2):
     room_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, combined_username)
 
     # Return the UUID as a string
-    return room_uuid
+    return str(room_uuid)

@@ -6,32 +6,32 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 from chat.utils.gnerate_room_name import generate_room_name
 
-from .models import UserCommunication, Chat
+from .models import Conversation, Chat, User
 
 import asyncio
 
 from asgiref.sync import sync_to_async
 
 
-def get_or_create_communication_async(sender, recipient):
-    communicated_user, created = UserCommunication.objects.get_or_create(
-        user=sender, defaults={'user': sender})
-    communicated_user.communicated_with.add(recipient)
-
-
 class ChatConsumer(AsyncWebsocketConsumer):
-    room_id:uuid.UUID
+    conversation: Conversation
+
+    def get_or_create_communication(self, sender, recipient_usename):
+        receiver = User.objects.get(username=recipient_usename)
+        self.conversation, created = Conversation.objects.update_or_create(
+            sender=sender, receiver=receiver)
+
     async def connect(self):
         sender = self.scope['user']
         username = sender.username
-        recipient = self.scope["url_route"]["kwargs"]["room_name"]
+        recipient_username = self.scope["url_route"]["kwargs"]["room_name"]
 
-        self.room_id = generate_room_name(recipient, username)
-        self.room_name = str(self.room_id)
-        self.room_group_name = "chat_%s" % self.room_name
+        self.room_name = generate_room_name(recipient_username, username)
 
-        asyncio.ensure_future(sync_to_async(
-            get_or_create_communication_async)(sender, recipient))
+        self.room_group_name = "Chat_%s" % self.room_name
+
+        await sync_to_async(
+            self.get_or_create_communication)(sender, recipient_username)
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
@@ -47,9 +47,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
 
+        chat:Chat = await(sync_to_async(Chat.objects.create)(
+            conversation=self.conversation, message=message))
+        
+        message = {
+            'message':message,
+            'timestamp':str(chat.timestamp),
+            'sender_username':self.scope['user'].username,
+        }
+
         # Send message to room group
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat_message", "message": message}
+            self.room_group_name, {"type": "Chat_message", "message": message}
         )
 
         # Send JSON response back to WebSocket
@@ -57,10 +66,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(response))
 
     # Receive message from room group
-    async def chat_message(self, event):
+    async def Chat_message(self, event):
         message = event["message"]
-        print(self.room_id)
-        asyncio.ensure_future(sync_to_async(Chat.objects.create)(
-            room_id=uuid.UUID(self.room_name), message=message))
+
         # Send message to WebSocket
         await self.send(text_data=json.dumps({"message": message}))
