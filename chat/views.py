@@ -1,9 +1,9 @@
-
 from django.http import HttpRequest, JsonResponse
-from .models import Conversation
-from django.db.models import Q
+from .models import Chat, Conversation
+from django.db.models import Q, Max
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from . import consumers
 
 
 def conversations(request: HttpRequest):
@@ -49,15 +49,23 @@ def load_messages(request: HttpRequest, username):
             (Q(receiver__username=current_username) & Q(sender__username=username))
         ).prefetch_related('messages', 'sender')
 
+        chats = []
+    
+        for conversation in conversations:
+            messages = (
+                list(conversation.messages.all().order_by('timestamp')))
+            chats.extend(messages)
+
+        sorted_chats = sorted(chats, key=lambda chat: chat.timestamp)
+
         message_list = []
 
-        for conversation in conversations:
-            for message in conversation.messages.all():
-                message_list.append({
-                    'message': message.message,
-                    'timestamp': message.timestamp,
-                    'sender_username': message.conversation.sender.username
-                })
+        for message in sorted_chats:
+            message_list.append({
+                'message': message.message,
+                'timestamp': message.timestamp,
+                'sender_username': message.conversation.sender.username
+            })
 
         return JsonResponse({'status': True, 'message_list': message_list})
     except ObjectDoesNotExist:
