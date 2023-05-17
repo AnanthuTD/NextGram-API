@@ -1,15 +1,8 @@
 import json
 from pprint import pprint
-import uuid
-
 from channels.generic.websocket import AsyncWebsocketConsumer
-
 from chat.utils.gnerate_room_name import generate_room_name
-
 from .models import Conversation, Chat, User
-
-import asyncio
-
 from asgiref.sync import sync_to_async
 
 
