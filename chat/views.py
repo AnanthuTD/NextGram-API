@@ -1,3 +1,4 @@
+import json
 from django.http import HttpRequest, JsonResponse
 from .models import Chat, Conversation
 from django.db.models import Q, Max
@@ -64,9 +65,19 @@ def load_messages(request: HttpRequest, username):
             message_list.append({
                 'message': message.message,
                 'timestamp': message.timestamp,
-                'sender_username': message.conversation.sender.username
+                'sender_username': message.conversation.sender.username,
+                'id': message.id
             })
 
         return JsonResponse({'status': True, 'message_list': message_list})
     except ObjectDoesNotExist:
         return JsonResponse({'status': False, 'message': 'Conversation not found'})
+    
+def unsend(request:HttpRequest):
+    data =json.loads(request.body)
+    id = data['id']
+    try:
+        Chat.objects.get(id=id, conversation__sender=request.user).delete()
+        return JsonResponse({'status':True, 'message': 'Chat was deleted successfully'}) 
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': False, 'message':'chat not found or not the sender'})
