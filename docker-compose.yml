@@ -1,0 +1,20 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: 'wowgram'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: '#BreakRules.'
+  redis:
+    image: redis

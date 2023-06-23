@@ -1,17 +1,24 @@
-FROM mybaseimage
-# Set the working directory to /app
+# Use an official Python runtime as the base image
+FROM python:3.9
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY ./backend .
+# Copy the requirements file
+COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# Install project dependencies
+RUN pip install -r requirements.txt
 
-# Make port 80 available to the world outside this container
-EXPOSE 80 5432
-# Define environment variable
-ENV NAME World
+# Copy the project code into the container
+COPY . .
 
-# Run manage.py when the container launches
-CMD ["python", "manage.py", "runserver", "0.0.0.0:80"]
+# Expose the port used by the Django application (change if necessary)
+EXPOSE 8000
+
+# Run the Django development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
