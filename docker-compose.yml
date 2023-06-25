@@ -10,6 +10,8 @@ services:
     environment:
       - DB_HOST=db
       - REDIS_HOST=redis
+    volumes:
+      - .:/app
   db:
     image: postgres
     environment:
