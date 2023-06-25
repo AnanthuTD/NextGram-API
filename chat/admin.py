@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import Conversation, Chat
+from .models import Conversation, Chat, Presence, Room
 # Register your models here.
-admin.site.register([Conversation, Chat])
+admin.site.register([Conversation, Chat, Presence, Room])

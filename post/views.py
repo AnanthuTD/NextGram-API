@@ -4,9 +4,10 @@ from pprint import pprint
 from uuid import UUID
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from .forms import PostForm
+from yaml import serialize
+from .forms import PostForm, StoryForm
 from django.views.decorators.http import require_GET, require_http_methods
-from .models import Post, User, Comment
+from .models import Post, Story, User, Comment
 from django.db.models import F, Prefetch
 
 
@@ -28,10 +29,9 @@ def post(request: HttpRequest, other_user=None):
         else:
             user = request.user
         try:
-            posts = list(user.post_set.all().values("post_id",
+            posts = list(user.post_set.all().values("id",
                                                     'file',
                                                     'likes',
-
                                                     'caption',
                                                     'hash_tag',
                                                     'mentions',
@@ -42,7 +42,7 @@ def post(request: HttpRequest, other_user=None):
             return JsonResponse({'status': False, 'message': str(e)})
 
     else:
-        return JsonResponse({'status': False})
+        return JsonResponse({'status': False})    
 
 
 @require_GET
@@ -102,7 +102,7 @@ def dislike(request, post_id: UUID):
         return HttpResponseBadRequest('You must be logged in to like a post.')
 
     # Get the post object or return a 404 error if it doesn't exist
-    post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(Post, id=post_id)
 
     # Add the user to the post's likes
     try:
@@ -138,7 +138,7 @@ def comments(request: HttpRequest):
         if not comment or not isinstance(comment, str):
             return JsonResponse({'status': False, 'message': 'no comment found'})
         try:
-            post_id = data['post_id']
+            post_id = data['id']
             post = Post.objects.get(post_id=post_id)
         except Post.DoesNotExist:
             return JsonResponse({'status': False, 'message': 'post does not exist'})
@@ -154,7 +154,7 @@ def comments(request: HttpRequest):
 
     elif request.method == 'GET':
         try:
-            post_id = request.GET['post_id']
+            post_id = request.GET['id']
             post = Post.objects.get(post_id=post_id)
         except Post.DoesNotExist:
             return JsonResponse({'status': False, 'message': 'post does not exist'})
@@ -172,3 +172,40 @@ def comments(request: HttpRequest):
 
     else:
         return JsonResponse({'status': False, 'message': 'invalid request method'})
+
+
+def story(request: HttpRequest):
+
+    if request.method == 'POST':
+        form = StoryForm(request.POST, request.FILES, user_id=request.user.id)
+
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'status': True})
+        else:
+            print("posting errors : ", form.errors)
+            return JsonResponse({'status': False})
+    else:
+        return JsonResponse({'status': False})
+
+
+@require_GET
+def stories(request: HttpRequest):
+    stories = Story.objects.select_related('user').exclude(user=request.user)
+
+    storiesList = []
+
+    for story in stories:
+        serialized_story = {
+            'id': story.id,
+            'username': story.user.get_username(),
+            'profile_img':story.user.profile.profile_img.url,
+            'file': story.file.url,
+            'caption': story.caption,
+            'hash_tag': story.hash_tag,
+            'mentions': story.mentions,
+            'location': story.location
+        }
+        storiesList.append(serialized_story)
+
+    return JsonResponse({'status': True, 'stories': storiesList})
