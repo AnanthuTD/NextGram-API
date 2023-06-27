@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 from django.http import HttpRequest, JsonResponse
 from .models import Chat, Conversation
 from django.db.models import Q, Max
@@ -22,7 +23,7 @@ def conversations(request: HttpRequest):
             other_user = conversation.receiver
         else:
             other_user = conversation.sender
-
+ 
         conversation_dict = {
             'username': other_user.username,
             'profile_img': settings.MEDIA_URL + str(other_user.profile.profile_img) if other_user.profile.profile_img else None,
@@ -30,13 +31,17 @@ def conversations(request: HttpRequest):
             'updated_at': conversation.updated_at
             # 'unread_count': conversation.messages.filter(read=False, conversation__sender=user).count(),
         }
-        for con_dict in response['conversations']:
-            if con_dict['username'] == conversation_dict['username']:
-                if con_dict['updated_at'] > conversation_dict['updated_at']:
-                    response['conversations'].remove(con_dict)
-
-        response['conversations'].append(conversation_dict)
-
+        
+        flag = False
+        
+        if(not response['conversations']):
+            response['conversations'].append(conversation_dict)
+        else: 
+            for con_dict in response['conversations']:
+                if con_dict['username'] == conversation_dict['username']:
+                    flag = True          
+            if not flag : response['conversations'].append(conversation_dict)
+                    
     return JsonResponse(response)
 
 
