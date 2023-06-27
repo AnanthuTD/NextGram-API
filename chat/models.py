@@ -15,11 +15,7 @@ class Conversation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     conversation_id = models.UUIDField(default=uuid.uuid4, primary_key=True)
-
-    @property
-    def last_message(self):
-        last_chat = self.messages.order_by('-timestamp').first()
-        return last_chat.message if last_chat else ''
+    last_message=models.TextField(default='')
 
     class Meta:
         ordering = ['-updated_at']
