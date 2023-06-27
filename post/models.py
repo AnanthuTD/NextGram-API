@@ -9,7 +9,9 @@ from django.db.models.signals import post_save
 
 User = get_user_model() 
 
-upload_to_posts = lambda instance, filename: os.path.join("posts", rename_media(instance, filename))
+
+def upload_to_posts(instance, filename):
+    return os.path.join("posts", rename_media(instance, filename))
 
 
 class Post(models.Model):
@@ -26,9 +28,22 @@ class Post(models.Model):
     location = models.CharField(max_length=100, blank=True)
     time_stamp = models.DateTimeField(auto_now_add=True)
 
-    def upload_to_posts(self, filename): 
-        os.path.join("posts", rename_media(self, filename))
 
+def upload_to_stories(instance, filename):
+    return os.path.join("stories", rename_media(instance, filename))
+
+
+class Story(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    file = models.FileField(upload_to=upload_to_stories)
+    caption = models.TextField(blank=True)
+    hash_tag = ArrayField(models.CharField(
+        max_length=255), blank=True, null=True)
+    mentions = ArrayField(models.CharField(
+        max_length=255), blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True)
+    time_stamp = models.DateTimeField(auto_now_add=True)
 
 
 class Comment(models.Model):
@@ -44,18 +59,3 @@ def increase_post_count(sender, instance, created, **kwargs):
         profile = instance.user.profile
         profile.post_count += 1
         profile.save()
-
-
-upload_to_stories = lambda instance, filename: os.path.join("stories", rename_media(instance, filename))
-
-class Story(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
-    file = models.FileField(upload_to=upload_to_stories)
-    caption = models.TextField(blank=True)
-    hash_tag = ArrayField(models.CharField(
-        max_length=255), blank=True, null=True)
-    mentions = ArrayField(models.CharField(
-        max_length=255), blank=True, null=True)
-    location = models.CharField(max_length=100, blank=True)
-    time_stamp = models.DateTimeField(auto_now_add=True)

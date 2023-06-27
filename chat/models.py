@@ -40,19 +40,6 @@ class Chat(models.Model):
         super().save(*args, **kwargs)
 
 
-class Presence(models.Model):
-    room = models.ForeignKey("Room", on_delete=models.CASCADE)
-    channel_name = models.CharField(
-        max_length=255, help_text="Reply channel for connection that is present"
-    )
-
-    def __str__(self):
-        return self.channel_name
-
-    class Meta:
-        unique_together = [("room", "channel_name")]
-
-
 class RoomManager(models.Manager):
     def add(self, room_channel_name, user_channel_name):
         room, created = Room.objects.get_or_create(
@@ -80,7 +67,7 @@ class Room(models.Model):
         max_length=255, unique=True, help_text="Group channel name for this room"
     )
 
-    objects = RoomManager()  # Corrected variable name
+    objects = RoomManager()
 
     def add_presence(self, channel_name):
 
@@ -99,3 +86,16 @@ class Room(models.Model):
 
     def count_presences(self, channel_name=None):
         return Presence.objects.filter(room=self).count()
+
+
+class Presence(models.Model):
+    room = models.ForeignKey("Room", on_delete=models.CASCADE)
+    channel_name = models.CharField(
+        max_length=255, help_text="Reply channel for connection that is present"
+    )
+
+    def __str__(self):
+        return self.channel_name
+
+    class Meta:
+        unique_together = [("room", "channel_name")]

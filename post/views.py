@@ -4,7 +4,6 @@ from pprint import pprint
 from uuid import UUID
 from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404
-from yaml import serialize
 from .forms import PostForm, StoryForm
 from django.views.decorators.http import require_GET, require_http_methods
 from .models import Post, Story, User, Comment
@@ -17,7 +16,7 @@ def post(request: HttpRequest, other_user=None):
         form = PostForm(request.POST, request.FILES, user_id=request.user.id)
 
         if form.is_valid():
-            post = form.save()
+            form.save()
             return JsonResponse({'status': True})
         else:
             print("posting errors : ", form.errors)
