@@ -14,7 +14,7 @@ class Conversation(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    converdation_id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+    conversation_id = models.UUIDField(default=uuid.uuid4, primary_key=True)
 
     @property
     def last_message(self):
