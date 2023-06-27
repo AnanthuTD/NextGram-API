@@ -44,6 +44,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
+        
+        self.conversation.last_message = message
+        await sync_to_async(self.conversation.save)()
 
         chat: Chat = await(sync_to_async(Chat.objects.create)(
             conversation=self.conversation, message=message))
