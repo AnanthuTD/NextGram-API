@@ -8,6 +8,7 @@ from .forms import PostForm, StoryForm
 from django.views.decorators.http import require_GET, require_http_methods
 from .models import Post, Story, User, Comment
 from django.db.models import F, Prefetch
+from accounts.models import Profile
 
 
 def post(request: HttpRequest, other_user=None):
@@ -68,7 +69,7 @@ def allPost(request: HttpRequest):
         # Add the new post to the list
         posts.append(new_post)
 
-    pprint(posts)
+    # pprint(posts)
 
     return JsonResponse({'status': True, 'posts': posts})
 
@@ -190,21 +191,37 @@ def story(request: HttpRequest):
 
 @require_GET
 def stories(request: HttpRequest):
-    stories = Story.objects.select_related('user').exclude(user=request.user)
-
-    storiesList = []
+    profile = Profile.objects.prefetch_related(Prefetch("following")).get(user=request.user)
+    # pprint(profile.following.values())
+    following_list = profile.following.all()
+    stories = Story.objects.filter(user__profile__in=following_list).select_related('user')
+    # print('stories = ', stories)
+    
+    stories_dict = {}
 
     for story in stories:
-        serialized_story = {
-            'id': story.id,
-            'username': story.user.get_username(),
-            'profile_img':story.user.profile.profile_img.url,
-            'file': story.file.url,
-            'caption': story.caption,
-            'hash_tag': story.hash_tag,
-            'mentions': story.mentions,
-            'location': story.location
-        }
-        storiesList.append(serialized_story)
+        # print('story', story.user.id)
+        user = story.user
+        
+        if user.id in stories_dict:
+            stories_dict[user.id]['file'].append(story.file.url)
+            # print('story_dict = ', stories_dict)
+        else:
+            stories_dict[user.id] = {
+                # 'id': story.id,
+                'username': user.get_username(),
+                'profile_img': story.user.profile.profile_img.url,
+                'file': [story.file.url],
+                'caption': story.caption,
+                'hash_tag': story.hash_tag,
+                'mentions': story.mentions,
+                'location': story.location
+            }
+            
+        # print(stories_dict)
+        
+    # storiesList = list(stories_dict.values())
+    # print('storiesList', str(stories_dict.values()))
+    return JsonResponse({'status': True, 'stories': str(stories_dict.values())})
 
-    return JsonResponse({'status': True, 'stories': storiesList})
+
