@@ -18,3 +18,18 @@ class Profile(models.Model):
     website = models.URLField(blank=True)
     following = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     post_count = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+            return self.user.username
+
+    @property
+    def username(self):
+        return self.user.username
+
+    @property
+    def firstname(self):
+        return self.user.first_name
+
+    @property
+    def lastname(self):
+        return self.user.last_name
