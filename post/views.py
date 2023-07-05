@@ -204,14 +204,14 @@ def stories(request: HttpRequest):
         user = story.user
         
         if user.id in stories_dict:
-            stories_dict[user.id]['file'].append(story.file.url)
+            stories_dict[user.id]['stories'].append({'story':story.file.url, 'story_id': story.id})
             # print('story_dict = ', stories_dict)
         else:
             stories_dict[user.id] = {
-                # 'id': story.id,
+                'user_id': user.id,
                 'username': user.get_username(),
                 'profile_img': story.user.profile.profile_img.url,
-                'file': [story.file.url],
+                'stories': [{'story':story.file.url, 'story_id': story.id}],
                 'caption': story.caption,
                 'hash_tag': story.hash_tag,
                 'mentions': story.mentions,
@@ -222,6 +222,6 @@ def stories(request: HttpRequest):
         
     # storiesList = list(stories_dict.values())
     # print('storiesList', str(stories_dict.values()))
-    return JsonResponse({'status': True, 'stories': str(stories_dict.values())})
+    return JsonResponse({'status': True, 'stories': list(stories_dict.values())})
 
 
