@@ -220,3 +220,22 @@ def is_valid_uuid(value):
         return True
     except ValueError:
         return False
+    
+
+@require_GET
+def followers(request: HttpRequest):
+    user = request.user
+    profile: Profile = user.profile
+    followers: Profile = profile.followers.all()
+    response = []
+    for follower in followers:
+        dict = {
+            'user_id':follower.user.id,
+            'profile_img':follower.profile_img.url,
+            'username':follower.username,
+            'name':follower.firstname + ' ' + follower.lastname
+        }
+        response.append(dict)
+    
+    return JsonResponse({'followers':response})
+    
