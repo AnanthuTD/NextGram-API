@@ -33,3 +33,7 @@ class Profile(models.Model):
     @property
     def lastname(self):
         return self.user.last_name
+    
+    @property
+    def user_id(self):
+        return self.user.id
