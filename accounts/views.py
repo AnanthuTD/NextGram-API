@@ -220,7 +220,7 @@ def is_valid_uuid(value):
         return True
     except ValueError:
         return False
-    
+
 
 @require_GET
 def followers(request: HttpRequest):
@@ -230,12 +230,29 @@ def followers(request: HttpRequest):
     response = []
     for follower in followers:
         dict = {
-            'user_id':follower.user.id,
-            'profile_img':follower.profile_img.url,
-            'username':follower.username,
-            'name':follower.firstname + ' ' + follower.lastname
+            'user_id': follower.user.id,
+            'profile_img': follower.profile_img.url,
+            'username': follower.username,
+            'name': follower.firstname + ' ' + follower.lastname
         }
         response.append(dict)
-    
-    return JsonResponse({'followers':response})
-    
+
+    return JsonResponse({'followers': response})
+
+
+@require_GET
+def followings(request: HttpRequest):
+    user = request.user
+    profile: Profile = user.profile
+    followings: Profile = profile.following.all()
+    response = []
+    for following in followings:
+        dict = {
+            'user_id': following.user_id,
+            'profile_img': following.profile_img.url,
+            'username': following.username,
+            'name': following.firstname + ' ' + following.lastname
+        }
+        response.append(dict)
+
+    return JsonResponse({'followings': response})
