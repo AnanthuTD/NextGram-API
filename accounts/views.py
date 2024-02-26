@@ -7,10 +7,11 @@ import json
 from .forms import SignupForm
 from django.contrib.auth import authenticate, login, logout
 from .models import Profile
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractBaseUser, AnonymousUser
 from django.db.models import F
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from .models import Profile
+from django.db.models import Prefetch
 
 
 @require_POST
@@ -256,3 +257,54 @@ def followings(request: HttpRequest):
         response.append(dict)
 
     return JsonResponse({'followings': response})
+
+
+def sort_by_relevance(user):
+    return user.interaction_count
+
+
+def sort_by_popularity(followers):
+    return len(followers)
+
+
+def sort_by_freshness(user):
+    return user.posts_count
+    
+
+def suggested(current_user: AbstractBaseUser | AnonymousUser | User, followers: Profile):
+    common_users = current_user.profile.following.intersection(
+        followers)
+    return common_users
+
+
+@require_GET
+def search(request: HttpRequest):
+
+    # print(request.user.profile.followings)
+    query = request.GET.get('q', '')
+    if query == '':
+        return JsonResponse({'message': 'No search query provided'})
+    matching_users = User.objects.filter(username__contains=query).exclude(
+        id=request.user.id).prefetch_related(
+        Prefetch('profile__followers'))
+
+    response = []
+
+    for user in matching_users:
+        # follower_usernames = [follower.username for follower in user.profile.followers.all()]
+
+        follower = {
+            'user_id': user.id,
+            'id_user': user.profile.id_user,
+            'username': user.username, 
+            'fullname': user.first_name + ' ' + user.last_name,
+            'profile_img': user.profile.profile_img.url,
+            'followed_by': list(suggested(request.user, user.profile.followers.all()).values('user_id', 'user__username')),
+        }
+        response.append(follower)
+        # print(follower)
+
+    response.sort(key=lambda user: (len(user['followed_by']), sort_by_popularity(
+        user['followed_by'])), reverse=True)
+
+    return JsonResponse({'users': response})

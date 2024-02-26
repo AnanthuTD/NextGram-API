@@ -65,16 +65,21 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Strict'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
 ]
 
 # CORS_ORGIN
 
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
-]
+    'http://127.0.0.1:3000',
+    'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
+] 
+ALLOWED_HOSTS = ['*']
+
 
 
 ROOT_URLCONF = 'social_media_backend.urls'
@@ -184,7 +189,8 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(os.environ.get('REDIS_HOST', '127.0.0.1'), 6379)],
+            "hosts": ["redis://default:MxCxLHhb9jLZGTfWtDaZWlJijSh7OPLA@redis-15933.c1.asia-northeast1-1.gce.cloud.redislabs.com:15933"],
         },
     },
 }
+

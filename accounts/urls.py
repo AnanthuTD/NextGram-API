@@ -11,4 +11,6 @@ urlpatterns = [
     path('<uuid:id_user>/follow/', views.unfollow, name="unfollow"),
     path('followers/', views.followers, name='followers'),
     path('followings/', views.followings, name='followings'),
+    path('search/', views.search, name='search'),
+    # path('search/user', views.search, name='search'),
 ]
