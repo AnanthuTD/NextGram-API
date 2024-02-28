@@ -129,49 +129,44 @@ def likes_serializer(likes):
     ))
 
 
-def comments(request: HttpRequest):
-
+def comments(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
-        data = json.loads(request.body)
-        comment = data["comment"]
-        print(comment)
-        if not comment or not isinstance(comment, str):
-            return JsonResponse({'status': False, 'message': 'no comment found'})
         try:
-            post_id = data['id']
-            post = Post.objects.get(post_id=post_id)
+            data = json.loads(request.body)
+            comment = data.get("comment")
+
+            if not comment or not isinstance(comment, str):
+                return JsonResponse({'status': False, 'message': 'Invalid comment format'})
+
+            post_id = data.get('id')
+            print('postid ', data)
+            post = get_object_or_404(Post, id=post_id)
+
+            comment_instance = Comment.objects.create(
+                post=post, author=request.user, comment=comment)
+
+            serialized_comment = serializers.serialize('json', [comment_instance])
+            return JsonResponse({'status': True, 'message': 'Comment created', 'comment': serialized_comment})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': False, 'message': 'Invalid JSON format'})
         except Post.DoesNotExist:
-            return JsonResponse({'status': False, 'message': 'post does not exist'})
-        comment_instance = Comment.objects.create(
-            post=post, author=request.user, comment=comment)
-        return JsonResponse({'status': True, 'message': 'comment created', 'comment': {
-            'id': comment_instance.id,
-            'author': comment_instance.author.get_username(),
-            'profile_img': comment_instance.author.profile.profile_img.url,
-            'comment': comment_instance.comment,
-            'time_stamp': comment_instance.time_stamp
-        }})
+            return JsonResponse({'status': False, 'message': 'Post does not exist'})
 
     elif request.method == 'GET':
-        try:
-            post_id = request.GET['id']
-            post = Post.objects.get(post_id=post_id)
+        try:            
+            post_id = request.GET.get('id')
+            print('post_id')
+            post = get_object_or_404(Post, id=post_id)
+            comments = Comment.objects.filter(post=post).select_related('author')
+            serialized_comments = serializers.serialize('json', comments)
+            return JsonResponse({'status': True, 'comments': serialized_comments})
         except Post.DoesNotExist:
-            return JsonResponse({'status': False, 'message': 'post does not exist'})
-        comments = Comment.objects.filter(post=post).select_related('author')
-        comment_list = []
-        for comment in comments:
-            comment_list.append({
-                'id': comment.id,
-                'author': comment.author.get_username(),
-                'profile_img': comment.author.profile.profile_img.url,
-                'comment': comment.comment,
-                'time_stamp': comment.time_stamp
-            })
-        return JsonResponse({'status': True, 'comments': comment_list})
+            print('nothing')
+            return JsonResponse({'status': False, 'message': 'Post does not exist'})
 
     else:
-        return JsonResponse({'status': False, 'message': 'invalid request method'})
+        return JsonResponse({'status': False, 'message': 'Invalid request method'})
 
 
 def story(request: HttpRequest):

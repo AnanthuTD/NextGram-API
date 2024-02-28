@@ -5,6 +5,12 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+class Interest(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
 class Profile(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, null=False, blank=False)
@@ -18,6 +24,7 @@ class Profile(models.Model):
     website = models.URLField(blank=True)
     following = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     post_count = models.PositiveIntegerField(default=0)
+    interests = models.ManyToManyField(Interest, related_name='profiles')
 
     def __str__(self):
             return self.user.username
@@ -37,3 +44,4 @@ class Profile(models.Model):
     @property
     def user_id(self):
         return self.user.id
+    

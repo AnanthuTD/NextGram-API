@@ -12,7 +12,8 @@ from django.db.models import F
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from .models import Profile
 from django.db.models import Prefetch
-
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.contrib.auth.decorators import login_required
 
 @require_POST
 def signup(request):
@@ -308,3 +309,21 @@ def search(request: HttpRequest):
         user['followed_by'])), reverse=True)
 
     return JsonResponse({'users': response})
+
+
+def user_interests(request):
+    if request.method == 'GET':
+        interests = list(request.user.profile.interests.values_list('name', flat=True))
+        return JsonResponse({'interests': interests}) 
+    elif request.method == 'POST':
+        print(request.POST)
+
+        interests = request.POST.getlist('interests[]')
+        # Process the interests, save them to the database, etc.
+        # Example: save interests for the current user
+        print(interests)
+        request.user.profile.interests.set(interests)
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
