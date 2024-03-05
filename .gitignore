@@ -96,3 +96,5 @@ media/posts
 media/stories
 
 venv
+.venv
+
