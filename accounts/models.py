@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 class Interest(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, primary_key=True)
 
     def __str__(self):
         return self.name
@@ -27,7 +27,7 @@ class Profile(models.Model):
     interests = models.ManyToManyField(Interest, related_name='profiles')
 
     def __str__(self):
-            return self.user.username
+        return self.user.username
 
     @property
     def username(self):

@@ -17,7 +17,7 @@ def upload_to_posts(instance, filename):
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
-    file = models.FileField(upload_to=upload_to_posts)
+    file = models.FileField(upload_to=upload_to_posts, max_length=200)
     likes = models.ManyToManyField("auth.User", related_name='liked')
     # shares = models.ManyToManyField("auth.User")
     caption = models.TextField(blank=True)
@@ -25,7 +25,7 @@ class Post(models.Model):
         max_length=255), blank=True, null=True)
     mentions = ArrayField(models.CharField(
         max_length=255), blank=True, null=True)
-    location = models.CharField(max_length=100, blank=True)
+    location = models.CharField(max_length=200, blank=True)
     time_stamp = models.DateTimeField(auto_now_add=True)
 
 

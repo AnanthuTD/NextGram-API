@@ -14,6 +14,7 @@ from .models import Profile
 from django.db.models import Prefetch
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 
 @require_POST
 def signup(request):
@@ -71,47 +72,49 @@ def signup(request):
 
 
 def login_view(request: HttpRequest):
-    if (request.method == 'POST'):
-        data = json.loads(request.body)
+    try:
+        if (request.method == 'POST'):
+            data = json.loads(request.body)
 
-        if not data:
-            return JsonResponse({'status': False, 'errors': {}})
+            if not data:
+                return JsonResponse({'status': False, 'errors': {}})
 
-        phone_email_username = data['phone_email_username']
-        password = data['password1']
+            phone_email_username = data['phone_email_username']
+            password = data['password1']
 
-        user = authenticate(
-            request, phone_email_username=phone_email_username, password=password)
+            user = authenticate(
+                request, phone_email_username=phone_email_username, password=password)
 
-        if not user:
-            return JsonResponse({'status': False, 'errors': {}})
+            if not user:
+                return JsonResponse({'status': False, 'errors': {}})
 
-        # set current user session data
-        if user is not None:
-            login(request, user)
+            # set current user session data
+            if user is not None:
+                login(request, user)
 
-        response = JsonResponse({
-            'status': True,
-            'user': serialize_to_dict(user)})  # type: ignore
-
-        id_user = user.profile.id_user  # type: ignore
-        response.set_cookie('user', value=id_user,
-                            expires=request.session.get_expiry_date(), samesite='Lax', domain='localhost')
-
-        return response
-
-    elif (request.method == 'GET'):
-        if request.user.is_authenticated and request.user.profile:  # type: ignore
-            return JsonResponse({
+            response = JsonResponse({
                 'status': True,
-                'user': serialize_to_dict(request.user)})  # type: ignore
+                'user': serialize_to_dict(user)})  # type: ignore
+
+            id_user = user.profile.id_user  # type: ignore
+            response.set_cookie('user', value=id_user,
+                                expires=request.session.get_expiry_date(), samesite='Lax', domain='localhost')
+
+            return response
+
+        elif (request.method == 'GET'):
+            if request.user.is_authenticated and request.user.profile:  # type: ignore
+                return JsonResponse({
+                    'status': True,
+                    'user': serialize_to_dict(request.user)})  # type: ignore
+            else:
+                logout_view(request)
+                return JsonResponse({'status': False})
+
         else:
-            logout_view(request)
             return JsonResponse({'status': False})
-
-    else:
+    except ObjectDoesNotExist:
         return JsonResponse({'status': False})
-
 
 def serialize_to_dict(user: User):
     profile: Profile = user.profile  # type: ignore
@@ -316,12 +319,13 @@ def user_interests(request):
         interests = list(request.user.profile.interests.values_list('name', flat=True))
         return JsonResponse({'interests': interests}) 
     elif request.method == 'POST':
-        print(request.POST)
-
-        interests = request.POST.getlist('interests[]')
-        # Process the interests, save them to the database, etc.
-        # Example: save interests for the current user
-        print(interests)
+        interests:list[str] = json.loads(request.body)['interests']
+        
+        print('interests: ', interests)
+        
+        for i in range(len(interests)):
+            interests[i] = interests[i].lower()
+        
         request.user.profile.interests.set(interests)
         return JsonResponse({'success': True})
     else:
