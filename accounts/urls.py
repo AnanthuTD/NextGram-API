@@ -13,4 +13,5 @@ urlpatterns = [
     path('followings/', views.followings, name='followings'),
     path('search/', views.search, name='search'),
     path('interests/', views.user_interests, name='user_interests'),
+    path('suggested-users/', views.suggested_users, name='suggested_users'),
 ]

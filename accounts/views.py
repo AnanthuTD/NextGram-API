@@ -15,6 +15,10 @@ from django.db.models import Prefetch
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.db.models import Count
+
 
 @require_POST
 def signup(request):
@@ -331,3 +335,54 @@ def user_interests(request):
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
+    
+@api_view(['GET'])
+def suggested_users(request):
+    user_profile = request.user.profile  # Assuming authenticated user
+    interests = user_profile.interests.all()  # Get interests of the current user
+    user_city = user_profile.location  # Get city of the current user
+
+    # Retrieve 'n' from query parameters or set a default value
+    n = int(request.GET.get('n', 5))  # Default to 5 if 'n' not provided in query parameters
+
+    # Include users who have posted the liked posts of the current user
+    liked_posts_users = User.objects.filter(post__likes=request.user)
+    liked_posts_profiles = Profile.objects.filter(user__in=liked_posts_users, interests__in=interests, location=user_city)[:n]
+
+    suggested_profiles = liked_posts_profiles
+
+    # Check if the number of suggested profiles is less than 5
+    if suggested_profiles.count() < n:
+        # Get profiles of users who share at least one interest with the current user and are from the same location
+        interest_location_profiles = Profile.objects.filter(interests__in=interests, location=user_city) \
+            .exclude(user=request.user)[:n - suggested_profiles.count()]
+        suggested_profiles = suggested_profiles | interest_location_profiles 
+
+    # Check if the number of suggested profiles is still less than 5
+    if suggested_profiles.count() < n:
+        # Get profiles of users who share at least one interest with the current user
+        interest_profiles = Profile.objects.filter(interests__in=interests) \
+            .exclude(user=request.user)[:n - suggested_profiles.count()]
+        suggested_profiles = suggested_profiles | interest_profiles
+
+    # Check if the number of suggested profiles is still less than 5
+    if suggested_profiles.count() < n:
+        # Get profiles of users from the same location
+        location_profiles = Profile.objects.filter(location=user_city) \
+            .exclude(user=request.user)[:n - suggested_profiles.count()]
+        suggested_profiles = suggested_profiles | location_profiles
+
+    # Get profiles of users with the most followers
+    most_followed_profiles = Profile.objects.annotate(num_followers=Count('followers')).order_by('-num_followers')[:n - suggested_profiles.count()]
+    suggested_profiles = suggested_profiles | most_followed_profiles
+
+    # Ensure the final suggested profiles queryset contains only unique profiles
+    suggested_profiles = suggested_profiles.distinct()
+
+    # Serialize data
+    suggested_users_data = [{'username': profile.username,
+                             'id': profile.user_id}
+                            for profile in suggested_profiles]
+
+    return Response({'suggested_users': suggested_users_data})
+
