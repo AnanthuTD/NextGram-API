@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,6 +25,7 @@ urlpatterns = [
     path('csrf_token/', include('csrf_token.urls')),
     path('post/', include('post.urls')),
     path('chat/', include('chat.urls')),
+    path('search/', include('search.urls'), name='search_api'), 
 ]
 
 urlpatterns = urlpatterns+static(settings.MEDIA_URL,
