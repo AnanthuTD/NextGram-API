@@ -66,11 +66,12 @@ MIDDLEWARE = [
 # csrf token
 
 CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SAMESITE = 'None'
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
+    'http://localhost'
 ]
 
 # CORS_ORGIN
@@ -81,6 +82,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
+    'http://localhost'
 ] 
 ALLOWED_HOSTS = ['*']
 

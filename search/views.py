@@ -1,8 +1,10 @@
 from django.db.models import Value, Case, When, F, IntegerField, Count, Q
 from django.http import JsonResponse
 from accounts.models import Profile
-from post.models import Post
+from post.models import Post, Comment
 from django.db.models.functions import Length
+from django.views.decorators import http
+import os
 
 def search(request):
     query = request.GET.get('query', '')
@@ -60,3 +62,25 @@ def search(request):
         })
     
     return JsonResponse({'results': search_results})
+
+@http.require_GET
+def search_by_hashtag(request, hashtag):
+    # Search posts
+    post_conditions = Q(hash_tag__icontains=hashtag)
+    posts = Post.objects.filter(post_conditions)
+    
+    print('posts: ', posts)
+    
+    # Serialize the search results
+    search_results = []
+    
+    # Add posts to search results
+    for post in posts:
+        search_results.append({
+            'post_id': post.id,
+            'likes_count': post.likes.count(),
+            'comments_count': Comment.objects.filter(post=post).count(),
+            'file_name': post.file.url,
+        })
+    
+    return JsonResponse({'posts': search_results})

@@ -81,7 +81,7 @@ def login_view(request: HttpRequest):
             data = json.loads(request.body)
 
             if not data:
-                return JsonResponse({'status': False, 'errors': {}})
+                return JsonResponse({'status': False, 'errors': 'no data'})
 
             phone_email_username = data['phone_email_username']
             password = data['password1']
@@ -90,7 +90,7 @@ def login_view(request: HttpRequest):
                 request, phone_email_username=phone_email_username, password=password)
 
             if not user:
-                return JsonResponse({'status': False, 'errors': {}})
+                return JsonResponse({'status': False, 'errors': 'no user'})
 
             # set current user session data
             if user is not None:
