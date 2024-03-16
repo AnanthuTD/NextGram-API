@@ -5,7 +5,10 @@ from .models import Chat, Conversation
 from django.db.models import Q, Max
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.views.decorators import http
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
 def conversations(request: HttpRequest):
     user = request.user
@@ -23,14 +26,18 @@ def conversations(request: HttpRequest):
             other_user = conversation.receiver
         else:
             other_user = conversation.sender
- 
+            
+        profile_img = None
+        if hasattr(other_user, 'profile') and other_user.profile.profile_img:
+            profile_img = settings.MEDIA_URL + str(other_user.profile.profile_img)
+
         conversation_dict = {
-            'username': other_user.username,
-            'profile_img': settings.MEDIA_URL + str(other_user.profile.profile_img) if other_user.profile.profile_img else None,
-            'last_message': conversation.last_message,
-            'updated_at': conversation.updated_at
-            # 'unread_count': conversation.messages.filter(read=False, conversation__sender=user).count(),
-        }
+                'username': other_user.username,
+                'profile_img': profile_img,
+                'last_message': conversation.last_message,
+                'updated_at': conversation.updated_at
+                # 'unread_count': conversation.messages.filter(read=False, conversation__sender=user).count(),
+            }
         
         flag = False
         
@@ -77,11 +84,15 @@ def load_messages(request: HttpRequest, username):
     except ObjectDoesNotExist:
         return JsonResponse({'status': False, 'message': 'Conversation not found'})
     
-def unsend(request:HttpRequest):
-    data =json.loads(request.body)
-    id = data['id']
-    try:
-        Chat.objects.get(id=id, conversation__sender=request.user).delete()
-        return JsonResponse({'status':True, 'message': 'Chat was deleted successfully'}) 
-    except ObjectDoesNotExist:
-        return JsonResponse({'status': False, 'message':'chat not found or not the sender'})
+def unsend(request: HttpRequest):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            chat_id = data.get('id')
+            chat = Chat.objects.get(id=chat_id, conversation__sender=request.user.id)
+            chat.delete()
+            return JsonResponse({'status': True, 'message': 'Chat was deleted successfully'})
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': False, 'message': 'Chat not found or you are not the sender'}, status=404)
+    else:
+        return JsonResponse({'status': False, 'message': 'Method not allowed'}, status=405)

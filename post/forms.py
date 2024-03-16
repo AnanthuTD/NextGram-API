@@ -19,6 +19,7 @@ class PostForm(forms.ModelForm):
                   'hash_tag',
                   'mentions',
                   'location',
+                  'private'
                   ]
 
     def __init__(self, *args, **kwargs):

@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -71,7 +71,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
-    'http://localhost'
 ]
 
 # CORS_ORGIN
@@ -82,7 +81,6 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://wowgram-frontend-aiurq8pzp-ananthutd.vercel.app',
-    'http://localhost'
 ] 
 ALLOWED_HOSTS = ['*']
 
@@ -191,6 +189,23 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
+    },
+}
+
 # Daphne
 
 ASGI_APPLICATION = "social_media_backend.asgi.application"
@@ -201,8 +216,15 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": ["redis://default:MxCxLHhb9jLZGTfWtDaZWlJijSh7OPLA@redis-15933.c1.asia-northeast1-1.gce.cloud.redislabs.com:15933"],
+            # "hosts": ["redis://default:MxCxLHhb9jLZGTfWtDaZWlJijSh7OPLA@redis-15933.c1.asia-northeast1-1.gce.cloud.redislabs.com:15933"],
+            "hosts": ["redis://:kichu@127.0.0.1:6379/0"],
         },
     },
 }
+
+""" REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Allow any request without authentication
+    ],
+} """
 

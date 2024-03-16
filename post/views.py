@@ -7,9 +7,9 @@ from django.shortcuts import get_object_or_404
 from .forms import PostForm, StoryForm
 from django.views.decorators.http import require_GET, require_http_methods
 from .models import Post, Story, User, Comment
-from django.db.models import F, Prefetch
+from django.db.models import F, Prefetch, Q
 from accounts.models import Profile
-
+from django.core.serializers import serialize
 
 def post(request: HttpRequest, other_user=None):
 
@@ -20,7 +20,7 @@ def post(request: HttpRequest, other_user=None):
             form.save()
             return JsonResponse({'status': True})
         else:
-            print("posting errors : ", form.errors)
+            logging.error("posting errors : ", form.errors)
             return JsonResponse({'status': False})
 
     elif request.method == "GET":
@@ -29,14 +29,44 @@ def post(request: HttpRequest, other_user=None):
         else:
             user = request.user
         try:
-            posts = list(user.post_set.all().values("id",
+            if other_user:
+                following_users = request.user.profile.followers.all()
+
+                # Filter posts that are not private or are posted by users who the current user is following
+                posts = user.post_set.filter(
+                    Q(private=False) | Q(user__profile__in=following_users)
+                ).values(
+                    "id",
+                    'file',
+                    'likes',
+                    'caption',
+                    'hash_tag',
+                    'mentions',
+                    'location',
+                )
+                posts_data = [
+                    {
+                        "id": post['id'],
+                        "file": post['file'],
+                        "likes": post['likes'],
+                        "caption": post['caption'],
+                        "hash_tag": post['hash_tag'],
+                        "mentions": post['mentions'],
+                        "location": post['location'],
+                    }
+                    for post in posts
+                ]
+                # Return JsonResponse with the posts data
+                return JsonResponse({'status': True, 'posts': posts_data})
+            else:
+                posts = list(user.post_set.all().values("id",
                                                     'file',
                                                     'likes',
                                                     'caption',
                                                     'hash_tag',
                                                     'mentions',
                                                     'location',))
-            return JsonResponse({'status': True, 'posts': posts})
+                return JsonResponse({'status': True, 'posts': posts})
         except Exception as e:
             logging.error(e, exc_info=True)
             return JsonResponse({'status': False, 'message': str(e)})
@@ -47,8 +77,15 @@ def post(request: HttpRequest, other_user=None):
 
 @require_GET
 def allPost(request: HttpRequest):
-    postsQuery = Post.objects.prefetch_related(Prefetch("likes", queryset=User.objects.only(
-        "username", "first_name", "last_name"))).select_related('user').exclude(user=request.user)
+    following_users = request.user.profile.followers.all()
+    
+    postsQuery = Post.objects.prefetch_related(
+        Prefetch("likes", queryset=User.objects.only("username", "first_name", "last_name"))
+    ).select_related('user').exclude(
+        user=request.user
+    ).filter(
+        Q(private=False) | Q(user__profile__in=following_users)
+    )
 
     posts = []
 
@@ -139,7 +176,6 @@ def comments(request: HttpRequest) -> JsonResponse:
                 return JsonResponse({'status': False, 'message': 'Invalid comment format'})
 
             post_id = data.get('id')
-            print('postid ', data)
             post = get_object_or_404(Post, id=post_id)
 
             comment_instance = Comment.objects.create(
@@ -156,13 +192,11 @@ def comments(request: HttpRequest) -> JsonResponse:
     elif request.method == 'GET':
         try:            
             post_id = request.GET.get('id')
-            print('post_id')
             post = get_object_or_404(Post, id=post_id)
             comments = Comment.objects.filter(post=post).select_related('author')
             serialized_comments = serializers.serialize('json', comments)
             return JsonResponse({'status': True, 'comments': serialized_comments})
         except Post.DoesNotExist:
-            print('nothing')
             return JsonResponse({'status': False, 'message': 'Post does not exist'})
 
     else:
@@ -178,7 +212,7 @@ def story(request: HttpRequest):
             form.save()
             return JsonResponse({'status': True})
         else:
-            print("posting errors : ", form.errors)
+            logging.error("posting errors : ", form.errors)
             return JsonResponse({'status': False})
     else:
         return JsonResponse({'status': False})

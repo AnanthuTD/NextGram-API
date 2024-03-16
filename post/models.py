@@ -27,6 +27,7 @@ class Post(models.Model):
         max_length=255), blank=True, null=True)
     location = models.CharField(max_length=200, blank=True)
     time_stamp = models.DateTimeField(auto_now_add=True)
+    private = models.BooleanField(default=False)
 
 
 def upload_to_stories(instance, filename):
